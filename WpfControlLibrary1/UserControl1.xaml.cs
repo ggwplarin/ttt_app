@@ -1,17 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
@@ -21,7 +12,8 @@ namespace WpfControlLibrary1
     {
         public ObservableCollection<string> board = new ObservableCollection<string>() { "", "", "", "", "", "", "", "", "" };
         string[][] twoDBoard = new string[3][];
-        public bool crosses = true;
+        public bool crosses = true;//who's turn
+
         public UserControl1()
         {
             InitializeComponent();
@@ -31,41 +23,38 @@ namespace WpfControlLibrary1
 
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++)//collection transform to array[][]
             {
-                twoDBoard[i] = board.Skip(i*3).Take(3).ToArray();
+                twoDBoard[i] = board.Skip(i * 3).Take(3).ToArray();
             }
         }
 
-        private string Check()
+        private void Bebesbaba(IEnumerable<string> temp)
         {
-            string ggwp = null;
-            IEnumerable<string> temp;
-            
+            if (board.Where(x => x != "").Count() == 9) { MessageBox.Show($"Bruh"); ResetBtn_Click(this, null); }//draw check
+            else
+            {
+                if (temp.Distinct().Count() == 1 && (temp.All(x => x == "X") || temp.All(x => x == "0")))//win check
+                {
+                    string s = temp.Distinct().FirstOrDefault();
+                    if (!String.IsNullOrEmpty(s))
+                    {
+                        MessageBox.Show($"{s} wins!");
+                        ResetBtn_Click(this, null);
+                    }
+                }
+            }
+        }
+        private void Check()
+        {
             for (int i = 0; i < 3; i++)
             {
-                temp = Enumerable.Range(0, 3).Select(t => twoDBoard[i][t]);
-                if (temp.Distinct().Count() == 1&&(temp.All(x=>x=="X")||temp.All(x=>x=="0")))
-                {
-                    ggwp = temp.Distinct().FirstOrDefault();
-                }
-                temp= Enumerable.Range(0, 3).Select(t => twoDBoard[t][i]);
-                if (temp.Distinct().Count() == 1 && (temp.All(x => x == "X") || temp.All(x => x == "0")))
-                {
-                    ggwp = temp.Distinct().FirstOrDefault();
-                }
+                Bebesbaba(Enumerable.Range(0, 3).Select(t => twoDBoard[i][t]));//vertical
+                Bebesbaba(Enumerable.Range(0, 3).Select(t => twoDBoard[t][i]));//horisontal
             }
-            temp = Enumerable.Range(0, 3).Select(t => twoDBoard[t][t]);
-            if (temp.Distinct().Count() == 1 && (temp.All(x => x == "X") || temp.All(x => x == "0")))
-            {
-                ggwp = temp.Distinct().FirstOrDefault();
-            }
-            temp = Enumerable.Range(0, 3).Select(t => twoDBoard[t][2-t]);
-            if (temp.Distinct().Count() == 1 && (temp.All(x => x == "X") || temp.All(x => x == "0")))
-            {
-                ggwp = temp.Distinct().FirstOrDefault();
-            }
-            return ggwp;
+            Bebesbaba(Enumerable.Range(0, 3).Select(t => twoDBoard[t][t]));//diagnal
+            Bebesbaba(Enumerable.Range(0, 3).Select(t => twoDBoard[t][2 - t]));//2diagonal
+
         }
         private void gg_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -73,19 +62,19 @@ namespace WpfControlLibrary1
             {
                 if (String.IsNullOrEmpty((string)((ListView)sender).SelectedItem))
                 {
-                    board[((ListView)sender).SelectedIndex] = crosses ? "X" : "0";
+                    board[((ListView)sender).SelectedIndex] = crosses ? "X" : "0";//sets symbol on a board
                     crosses = !crosses;
-                    string s = Check();
-                    if (!String.IsNullOrEmpty(s)) MessageBox.Show($"{s} wins!");
+                    Check();
                 }
             }
         }
 
-        private void ResetBtn_Click(object sender, RoutedEventArgs e)
+        private void ResetBtn_Click(object sender, RoutedEventArgs e)//restart game 
         {
-            
+            board = new ObservableCollection<string>() { "", "", "", "", "", "", "", "", "" };//board clear
+            crosses = true;
             gg.ItemsSource = board;
-            
+            board.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler(CollectionChanged);
         }
     }
 }
